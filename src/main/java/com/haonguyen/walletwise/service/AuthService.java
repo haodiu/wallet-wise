@@ -5,8 +5,8 @@ import com.haonguyen.walletwise.model.dto.SignInRequest;
 import com.haonguyen.walletwise.model.dto.SignUpRequest;
 import com.haonguyen.walletwise.model.dto.TokenDto;
 import com.haonguyen.walletwise.model.entity.User;
-import com.haonguyen.walletwise.repository.RoleRepository;
-import com.haonguyen.walletwise.repository.UserRepository;
+import com.haonguyen.walletwise.repository.IRoleRepository;
+import com.haonguyen.walletwise.repository.IUserRepository;
 import com.haonguyen.walletwise.security.jwt.JWTUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +20,8 @@ import java.util.HashMap;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final IUserRepository userRepository;
+    private final IRoleRepository roleRepository;
     private final JWTUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
