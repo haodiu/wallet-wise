@@ -1,9 +1,8 @@
 package com.haonguyen.walletwise.model.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,14 +20,13 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NonNull
     private String email;
 
-    @NotBlank(message = "Name is required")
+    @NonNull
     private String name;
 
-    @NotBlank(message = "Password is required")
+    @NonNull
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
