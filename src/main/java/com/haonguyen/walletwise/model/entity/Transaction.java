@@ -22,5 +22,5 @@ public class Transaction {
     @JoinColumn(name = "category_id", nullable = false)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private Transaction transaction;
+    private Category category;
 }

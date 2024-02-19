@@ -1,5 +1,6 @@
 package com.haonguyen.walletwise.service.impl;
 
+import com.haonguyen.walletwise.common.RoleType;
 import com.haonguyen.walletwise.exception.BadRequestException;
 import com.haonguyen.walletwise.exception.NotFoundException;
 import com.haonguyen.walletwise.exception.UnauthorizedException;
@@ -137,6 +138,8 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     @Override
     public UserDetailDto save(UserDetailDto dto) {
+        logger.error(dto.getEmail() + dto.getName() + dto.getRole() + dto.getPassword());
+        logger.error(" this dto: ", dto);
         User user = createFromD(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         userRepository.save(user);
@@ -145,6 +148,10 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     @Override
     public void delete(Long id) {
+        User entity = userRepository.findById(id).orElseThrow(() -> new NotFoundException(User.class, id));
+        if (entity.getRole().getName().equals(RoleType.ADMIN.getRoleName())) {
+            throw new BadRequestException("Permission denied");
+        }
         userRepository.deleteById(id);
     }
 
@@ -164,23 +171,11 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
         return dto;
     }
 
-    /**
-     * Updates a User entity with the details from a DTO object
-     *
-     * @param entity - the User entity to update
-     * @param dto    - the DTO object containing update details
-     * @throws IllegalArgumentException - if the role in the dto is null
-     * @throws NotFoundException        - if the role specified in the dto is not found in the repository
-     **/
     @Override
     public void updateEntity(User entity, UserDetailDto dto) {
-        if (entity != null && dto != null) {
-            String roleName = Optional.ofNullable(dto.getRole())
-                    .orElseThrow(() -> new IllegalArgumentException("Role cannot be null"));
-            Role role = roleRepository.findByName(roleName)
-                    .orElseThrow(() -> new NotFoundException("Role not found"));
-            entity.setRole(role);
-            entity.setName(dto.getName());
+        if (entity == null || dto == null) {
+            throw new BadRequestException("Entity and DTO cannot be null");
         }
+        entity.setName(dto.getName());
     }
 }

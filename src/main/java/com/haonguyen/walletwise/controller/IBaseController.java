@@ -27,7 +27,7 @@ public interface IBaseController<D, ID, S extends IBaseService<D, ID>> {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/{id}")
+    @PatchMapping("/{id}")
     default D update(@Valid @PathVariable ID id, @RequestBody D dto) {
         return getService().update(id, dto);
     }

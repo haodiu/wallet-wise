@@ -20,14 +20,14 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<JWTResponse> signUp(
-            @RequestBody @Valid SignUpRequest request
+            @Valid @RequestBody SignUpRequest request
     ) {
         return authService.signUp(request);
     }
 
     @PostMapping("/sign-in")
     public ResponseEntity<JWTResponse> signIn(
-            @RequestBody SignInRequest request
+            @Valid @RequestBody SignInRequest request
     ) {
         return authService.signIn(request);
     }
