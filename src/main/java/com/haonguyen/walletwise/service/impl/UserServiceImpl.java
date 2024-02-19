@@ -1,6 +1,8 @@
 package com.haonguyen.walletwise.service.impl;
 
+import com.haonguyen.walletwise.exception.BadRequestException;
 import com.haonguyen.walletwise.exception.NotFoundException;
+import com.haonguyen.walletwise.exception.UnauthorizedException;
 import com.haonguyen.walletwise.model.dto.*;
 import com.haonguyen.walletwise.model.entity.Role;
 import com.haonguyen.walletwise.model.entity.User;
@@ -39,10 +41,10 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     private void validateSignUpRequest(SignUpRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("User with this email already exists");
+            throw new BadRequestException("User with this email already exists");
         }
         if (userRepository.findByName(request.getName()).isPresent()) {
-            throw new IllegalArgumentException("User with this name already exists");
+            throw new BadRequestException("User with this name already exists");
         }
     }
 
@@ -59,19 +61,20 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
                 .build();
     }
     public ResponseEntity<JWTResponse> signUp(SignUpRequest request) {
-        // Check if the user already exists
         validateSignUpRequest(request);
-        // Create User entity from SignUpRequest
         User user = createUserFromSignUpRequest(request);
-        // Save the user to database
         userRepository.save(user);
         return createJWTResponse(user);
     }
 
     public ResponseEntity<JWTResponse> signIn(SignInRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (Exception e) {
+            throw new UnauthorizedException("Unauthorized: Invalid credentials");
+        }
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         return createJWTResponse(user);
     }

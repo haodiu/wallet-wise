@@ -4,6 +4,7 @@ import com.haonguyen.walletwise.model.dto.JWTResponse;
 import com.haonguyen.walletwise.model.dto.SignInRequest;
 import com.haonguyen.walletwise.model.dto.SignUpRequest;
 import com.haonguyen.walletwise.service.impl.UserServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<JWTResponse> signUp(
-            @RequestBody SignUpRequest request
+            @RequestBody @Valid SignUpRequest request
     ) {
         return authService.signUp(request);
     }

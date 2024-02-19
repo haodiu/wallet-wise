@@ -1,18 +1,19 @@
 package com.haonguyen.walletwise.model.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
 public class SignUpRequest {
-    @NotBlank
-    @Size(max = 50)
+    @NotEmpty(message = "Email is required")
+    @Email(message = "Email invalid format")
     private String email;
-    @NotBlank
+
+    @NotEmpty(message = "Name is required")
     @Size(min = 3, max = 20)
     private String name;
-    @NotBlank
+
+    @NotBlank(message = "Password is required")
     @Size(min = 6, max = 20)
     private String password;
 }
