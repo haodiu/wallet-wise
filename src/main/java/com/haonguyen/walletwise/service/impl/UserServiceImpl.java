@@ -16,6 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +28,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -113,13 +118,17 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     }
 
     @Override
-    public List<UserDetailDto> findAll() {
-        // start add pagination and sorting
+    public List<UserDetailDto> findAll(Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
+        Page<User> pagedResult = userRepository.findAll(paging);
 
-        // end
-        return userRepository.findAll().stream()
-                .map(this::createFromE)
-                .collect(Collectors.toList());
+        if (pagedResult.hasContent()) {
+            return pagedResult.getContent().stream()
+                    .map(this::createFromE)
+                    .collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     @Override

@@ -16,8 +16,12 @@ public interface IBaseController<D, ID, S extends IBaseService<D, ID>> {
     }
 
     @GetMapping("")
-    default List<D> getList() {
-        return getService().findAll();
+    default List<D> getList(
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(defaultValue = "id") String sortBy
+    ) {
+        return getService().findAll(pageNo, pageSize, sortBy);
     }
 
     @ResponseStatus(HttpStatus.OK)
