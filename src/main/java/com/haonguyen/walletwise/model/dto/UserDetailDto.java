@@ -17,6 +17,5 @@ public class UserDetailDto {
     private String email;
     private String name;
     private String role;
-    @JsonIgnore
     private String password;
 }

@@ -7,7 +7,6 @@ import com.haonguyen.walletwise.exception.UnauthorizedException;
 import com.haonguyen.walletwise.model.dto.*;
 import com.haonguyen.walletwise.model.entity.Role;
 import com.haonguyen.walletwise.model.entity.User;
-import com.haonguyen.walletwise.repository.IRoleRepository;
 import com.haonguyen.walletwise.repository.IUserRepository;
 import com.haonguyen.walletwise.security.jwt.JWTUtils;
 import com.haonguyen.walletwise.service.IBaseService;
@@ -23,22 +22,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IModelMapper<UserDetailDto, User> {
     private final IUserRepository userRepository;
-    private final IRoleRepository roleRepository;
+    private final RoleServiceImpl roleService;
+    private final EmailSenderServiceImpl emailSenderService;
+    private final PasswordResetTokenServiceImpl passwordSenderService;
     private final JWTUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -56,8 +53,7 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     private User createUserFromSignUpRequest(SignUpRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        Role userRole = roleRepository.findByName("user")
-                .orElseThrow(() -> new IllegalStateException("Default role not found"));
+        Role userRole = roleService.findByName("user");
 
         return User.builder()
                 .email(request.getEmail())
@@ -168,7 +164,7 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     public User createFromD(UserDetailDto dto) {
         User entity = modelMapper.map(dto, User.class);
         String roleName = Optional.ofNullable(dto.getRole()).orElseThrow(() -> new IllegalArgumentException("Role cannot be null"));
-        Role role = roleRepository.findByName(roleName).orElseThrow(() -> new NotFoundException("Not not found"));
+        Role role = roleService.findByName(roleName);
         entity.setRole(role);
         return entity;
     }
@@ -177,6 +173,7 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     public UserDetailDto createFromE(User entity) {
         UserDetailDto dto = modelMapper.map(entity, UserDetailDto.class);
         dto.setRole(entity.getRole().getName());
+        dto.setPassword(null);
         return dto;
     }
 
@@ -186,5 +183,16 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
             throw new BadRequestException("Entity and DTO cannot be null");
         }
         entity.setName(dto.getName());
+    }
+
+    public ResponseEntity<MessageResponse> createPasswordResetTokenForUser(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
+        String token = UUID.randomUUID().toString();
+        passwordSenderService.save(token, user);
+        //Send token to email
+        emailSenderService.sendEmail(user.getEmail(), "Password Reset Token","Token: " + token);
+        return ResponseEntity.ok(MessageResponse.builder()
+                .message("Password reset token sent to your email")
+                .build());
     }
 }

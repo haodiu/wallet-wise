@@ -6,9 +6,8 @@ import com.haonguyen.walletwise.service.impl.UserServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin("*")
 @RestController
@@ -20,5 +19,10 @@ public class UserControllerImpl implements IBaseController<UserDetailDto, Long, 
     @Override
     public UserServiceImpl getService() {
         return this.userService;
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        return userService.createPasswordResetTokenForUser(email);
     }
 }
