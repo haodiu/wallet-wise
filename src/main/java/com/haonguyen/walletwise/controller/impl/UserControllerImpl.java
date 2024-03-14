@@ -1,6 +1,7 @@
 package com.haonguyen.walletwise.controller.impl;
 
 import com.haonguyen.walletwise.controller.IBaseController;
+import com.haonguyen.walletwise.model.dto.ChangePasswordDto;
 import com.haonguyen.walletwise.model.dto.UserDetailDto;
 import com.haonguyen.walletwise.service.impl.UserServiceImpl;
 import jakarta.annotation.Resource;
@@ -24,5 +25,10 @@ public class UserControllerImpl implements IBaseController<UserDetailDto, Long, 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         return userService.createPasswordResetTokenForUser(email);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDto changePasswordDto) {
+        return userService.changePassword(changePasswordDto);
     }
 }

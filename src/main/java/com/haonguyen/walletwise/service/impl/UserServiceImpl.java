@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IModelMapper<UserDetailDto, User> {
-    private final IUserRepository userRepository;
+    private final IUserRepository iUserRepository;
     private final RoleServiceImpl roleService;
     private final EmailSenderServiceImpl emailSenderService;
     private final PasswordResetTokenServiceImpl passwordSenderService;
@@ -42,16 +42,16 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     private final ModelMapper modelMapper;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    private void validateSignUpRequest(SignUpRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+    private void validateSignUpRequest(SignUpRequestDto request) {
+        if (iUserRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("User with this email already exists");
         }
-        if (userRepository.findByName(request.getName()).isPresent()) {
+        if (iUserRepository.findByName(request.getName()).isPresent()) {
             throw new BadRequestException("User with this name already exists");
         }
     }
 
-    private User createUserFromSignUpRequest(SignUpRequest request) {
+    private User createUserFromSignUpRequest(SignUpRequestDto request) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         Role userRole = roleService.findByName("user");
 
@@ -62,14 +62,14 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
                 .role(userRole)
                 .build();
     }
-    public ResponseEntity<JWTResponse> signUp(SignUpRequest request) {
+    public ResponseEntity<JWTResponseDto> signUp(SignUpRequestDto request) {
         validateSignUpRequest(request);
         User user = createUserFromSignUpRequest(request);
-        userRepository.save(user);
+        iUserRepository.save(user);
         return createJWTResponse(user);
     }
 
-    public ResponseEntity<JWTResponse> signIn(SignInRequest request) {
+    public ResponseEntity<JWTResponseDto> signIn(SignInRequestDto request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -77,7 +77,7 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
         } catch (Exception e) {
             throw new UnauthorizedException("Unauthorized: Invalid credentials");
         }
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = iUserRepository.findByEmail(request.getEmail()).orElseThrow();
         return createJWTResponse(user);
     }
 
@@ -87,14 +87,14 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
      * @param user The user object for which the JWTResponse is generated.
      * @return The JWTResponse object containing JWT tokens and user information.
      */
-    private ResponseEntity<JWTResponse> createJWTResponse(User user) {
+    private ResponseEntity<JWTResponseDto> createJWTResponse(User user) {
         String jwtToken = jwtUtils.generateToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
         TokenDto tokenDto = TokenDto.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
-        return ResponseEntity.ok(JWTResponse.builder()
+        return ResponseEntity.ok(JWTResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
@@ -104,19 +104,19 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     }
 
     private User getDetail(Long id) {
-        return userRepository.findById(id)
+        return iUserRepository.findById(id)
                 .orElse(new User());
     }
 
     public User loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        return userRepository.findByEmail(username).orElseThrow();
+        return iUserRepository.findByEmail(username).orElseThrow();
     }
 
     @Override
     public List<UserDetailDto> findAll(Integer pageNo, Integer pageSize, String sortBy) {
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
-        Page<User> pagedResult = userRepository.findAll(paging);
+        Page<User> pagedResult = iUserRepository.findAll(paging);
 
         if (pagedResult.hasContent()) {
             return pagedResult.getContent().stream()
@@ -129,16 +129,16 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     @Override
     public UserDetailDto findById(Long id) {
-        return userRepository.findById(id)
+        return iUserRepository.findById(id)
                 .map(this::createFromE)
                 .orElseThrow(() -> new NotFoundException(User.class, id));
     }
 
     @Override
     public UserDetailDto update(Long id, UserDetailDto dto) {
-        User entity = userRepository.findById(id).orElseThrow(() -> new NotFoundException(User.class, id));
-        updateEntity(entity, dto);
-        return createFromE(userRepository.save(entity));
+        User entity = iUserRepository.findById(id).orElseThrow(() -> new NotFoundException(User.class, id));
+        entity = updateEntity(entity, dto);
+        return createFromE(iUserRepository.save(entity));
     }
 
     @Override
@@ -147,17 +147,17 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
         logger.error(" this dto: ", dto);
         User user = createFromD(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        userRepository.save(user);
+        iUserRepository.save(user);
         return createFromE(user);
     }
 
     @Override
     public void delete(Long id) {
-        User entity = userRepository.findById(id).orElseThrow(() -> new NotFoundException(User.class, id));
+        User entity = iUserRepository.findById(id).orElseThrow(() -> new NotFoundException(User.class, id));
         if (entity.getRole().getName().equals(RoleType.ADMIN.getRoleName())) {
             throw new BadRequestException("Permission denied");
         }
-        userRepository.deleteById(id);
+        iUserRepository.deleteById(id);
     }
 
     @Override
@@ -178,21 +178,41 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     }
 
     @Override
-    public void updateEntity(User entity, UserDetailDto dto) {
-        if (entity == null || dto == null) {
-            throw new BadRequestException("Entity and DTO cannot be null");
-        }
-        entity.setName(dto.getName());
+    public User updateEntity(User entity, UserDetailDto dto) {
+        modelMapper.map(dto, entity);
+        return entity;
     }
 
-    public ResponseEntity<MessageResponse> createPasswordResetTokenForUser(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
+    public ResponseEntity<MessageResponseDto> createPasswordResetTokenForUser(String email) {
+        User user = iUserRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
         String token = UUID.randomUUID().toString();
         passwordSenderService.save(token, user);
         //Send token to email
         emailSenderService.sendEmail(user.getEmail(), "Password Reset Token","Token: " + token);
-        return ResponseEntity.ok(MessageResponse.builder()
+        return ResponseEntity.ok(MessageResponseDto.builder()
                 .message("Password reset token sent to your email")
                 .build());
+    }
+
+    public ResponseEntity<MessageResponseDto> changePassword(ChangePasswordDto changePasswordDto) {
+        String token = changePasswordDto.getToken();
+        String email = changePasswordDto.getEmail();
+        String newPassword = changePasswordDto.getNewPassword();
+        User user = iUserRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
+        Long userId = user.getId();
+        // check token exists and not expired
+        Boolean isValid = passwordSenderService.isValidToken(userId, token);
+        if (isValid) {
+            String passwordEncoded = passwordEncoder.encode(newPassword);
+            user.setPassword(passwordEncoded);
+            iUserRepository.save(user);
+            return ResponseEntity.ok(MessageResponseDto.builder()
+                    .message("Successfully")
+                    .build());
+        } else {
+            return ResponseEntity.ok(MessageResponseDto.builder()
+                    .message("Token invalid")
+                    .build());
+        }
     }
 }

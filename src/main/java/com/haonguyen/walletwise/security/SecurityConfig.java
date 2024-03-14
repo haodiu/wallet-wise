@@ -19,6 +19,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -26,12 +29,19 @@ public class SecurityConfig {
     private final UserDetailServiceImpl userDetailServiceImpl;
     private final JWTAuthFilter jwtAuthFilter;
 
+    private static final String[] WHITE_LIST_URL = {
+            "/api/v1/auth/**",
+            "/api/v1/users/forgot-password",
+            "/api/v1/users/change-password"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(configurer -> configurer.authenticationEntryPoint(unauthorizedHandler()))
-                .authorizeHttpRequests(request -> request.requestMatchers("/api/v1/auth/**", "/api/v1/users/forgot-password").permitAll()
+                .authorizeHttpRequests(request -> request.requestMatchers(WHITE_LIST_URL).permitAll()
                         .requestMatchers("/api/v1/users/**").hasAuthority("admin")
+                        .requestMatchers("/api/v1/categories/**").hasAnyAuthority("admin", "user")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
