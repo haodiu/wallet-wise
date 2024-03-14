@@ -20,6 +20,5 @@ public class Category {
     private Long id;
     private String name;
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    @Nullable()
     private Collection<Transaction> transactions;
 }

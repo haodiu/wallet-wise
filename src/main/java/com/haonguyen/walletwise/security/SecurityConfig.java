@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(WHITE_LIST_URL).permitAll()
                         .requestMatchers("/api/v1/users/**").hasAuthority("admin")
                         .requestMatchers("/api/v1/categories/**").hasAnyAuthority("admin", "user")
+                        .requestMatchers("/api/v1/transactions/**").hasAnyAuthority("admin", "user")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

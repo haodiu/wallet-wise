@@ -1,5 +1,6 @@
 package com.haonguyen.walletwise.model.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,7 +17,9 @@ public class Transaction {
     private Long id;
     private String name;
     private Long amount;
+    @Nullable
     private String note;
+    @Nullable
     private Date date;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)

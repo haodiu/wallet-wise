@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserDetailDto {
-    private Integer id;
+    private Long id;
     @NotBlank
     @Size(max = 50)
     @Email

@@ -8,12 +8,15 @@ import com.haonguyen.walletwise.service.IBaseService;
 import com.haonguyen.walletwise.service.IModelMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,13 +25,24 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements IBaseService<CategoryDto, Long>, IModelMapper<CategoryDto, Category> {
     private final ICategoryRepository iCategoryRepository;
     private final ModelMapper modelMapper;
+    private final static Logger logger = LoggerFactory.getLogger(CategoryServiceImpl.class);
+
+    public Category getOne(Long id) {
+        return iCategoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(Category.class, id));
+    }
+
     @Override
     public List<CategoryDto> findAll(Integer pageNo, Integer pageSize, String sortBy) {
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
         Page<Category> pageResult = iCategoryRepository.findAll(paging);
-        return pageResult.getContent().stream()
-                .map(this::createFromE)
-                .collect(Collectors.toList());
+        if (pageResult.hasContent()) {
+            return pageResult.getContent().stream()
+                    .map(this::createFromE)
+                    .collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     @Override
