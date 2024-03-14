@@ -11,5 +11,5 @@ import java.util.List;
 public class CategoryDto {
     private Long id;
     private String name;
-    private List<Transaction> transactionList;
+    private List<TransactionDto> transactions;
 }
