@@ -15,7 +15,7 @@ import java.util.Date;
 @Entity(name = "_password_reset_token")
 public class PasswordResetToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     private String token;

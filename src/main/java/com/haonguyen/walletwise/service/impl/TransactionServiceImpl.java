@@ -57,6 +57,7 @@ public class TransactionServiceImpl implements IBaseService<TransactionDto, Long
         Transaction transaction = iTransactionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(Transaction.class, id));
         updateEntity(transaction, dto);
+        transaction.setId(id);
         return createFromE(iTransactionRepository.save(transaction));
     }
 
@@ -88,6 +89,8 @@ public class TransactionServiceImpl implements IBaseService<TransactionDto, Long
 
     @Override
     public Transaction updateEntity(Transaction entity, TransactionDto dto) {
+        // Skip null fields when mapping
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
         modelMapper.map(dto, entity);
         return entity;
     }
