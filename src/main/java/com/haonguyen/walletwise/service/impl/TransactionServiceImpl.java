@@ -1,6 +1,8 @@
 package com.haonguyen.walletwise.service.impl;
 
 import com.haonguyen.walletwise.exception.NotFoundException;
+import com.haonguyen.walletwise.model.dto.TokenDto;
+import com.haonguyen.walletwise.model.dto.TotalAmountDto;
 import com.haonguyen.walletwise.model.dto.TransactionDto;
 import com.haonguyen.walletwise.model.entity.Category;
 import com.haonguyen.walletwise.model.entity.Transaction;
@@ -17,8 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,4 +99,20 @@ public class TransactionServiceImpl implements IBaseService<TransactionDto, Long
         modelMapper.map(dto, entity);
         return entity;
     }
+
+//    public List<TotalAmountDto> computeTotalAmount(Date start, Date end) {
+//        logger.error(start.toString());
+//        List<Object[]> result = iTransactionRepository.getTotalAmountByDateRange(start, end);
+//        return result.stream()
+//                .map(this::createDtoFromObject)
+//                .collect(Collectors.toList());
+//    }
+
+    private TotalAmountDto createDtoFromObject(Object[] objArray) {
+        TotalAmountDto dto = new TotalAmountDto();
+        dto.setCategoryId((Long) objArray[0]);
+        dto.setAmount((Long) objArray[1]);
+        return dto;
+    }
+
 }

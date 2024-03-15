@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .exceptionHandling(configurer -> configurer.authenticationEntryPoint(unauthorizedHandler()))
                 .authorizeHttpRequests(request -> request.requestMatchers(WHITE_LIST_URL).permitAll()
                         .requestMatchers("/api/v1/users/**").hasAuthority("admin")
+//                        .requestMatchers("/api/v1/users/categories").hasAnyAuthority("admin", "user")
                         .requestMatchers("/api/v1/categories/**").hasAnyAuthority("admin", "user")
                         .requestMatchers("/api/v1/transactions/**").hasAnyAuthority("admin", "user")
                         .anyRequest().authenticated()

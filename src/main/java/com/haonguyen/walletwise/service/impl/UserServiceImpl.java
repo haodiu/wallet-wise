@@ -5,6 +5,7 @@ import com.haonguyen.walletwise.exception.BadRequestException;
 import com.haonguyen.walletwise.exception.NotFoundException;
 import com.haonguyen.walletwise.exception.UnauthorizedException;
 import com.haonguyen.walletwise.model.dto.*;
+import com.haonguyen.walletwise.model.entity.Category;
 import com.haonguyen.walletwise.model.entity.Role;
 import com.haonguyen.walletwise.model.entity.User;
 import com.haonguyen.walletwise.repository.IUserRepository;
@@ -26,6 +27,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,8 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
     private final IUserRepository iUserRepository;
     private final RoleServiceImpl roleService;
     private final EmailSenderServiceImpl emailSenderService;
+    private final CategoryServiceImpl categoryService;
+    private final TransactionServiceImpl transactionService;
     private final PasswordResetTokenServiceImpl passwordSenderService;
     private final JWTUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
@@ -216,5 +221,31 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
                     .message("Token invalid")
                     .build());
         }
+    }
+
+    public ResponseEntity<?> getCategories(String categoryName, String sortBy) {
+        if (categoryName == null) {
+            List<CategoryDto> categoryDtos = categoryService.findAll();
+            return ResponseEntity.ok(categoryDtos);
+        } else {
+            CategoryDto categoryDto = categoryService.findByName(categoryName, sortBy);
+            return ResponseEntity.ok(categoryDto);
+        }
+    }
+
+//    public ResponseEntity<List<TotalAmountDto>> computeTotalAmount(String start, String end) {
+//        // Chuyển đổi chuỗi ngày thành LocalDate
+//        LocalDate startDate = start != null ? LocalDate.parse(start) : null;
+//        LocalDate endDate = end != null ? LocalDate.parse(end) : null;
+//        List<TotalAmountDto> totalAmountDtoList = transactionService.computeTotalAmount(toDate(startDate), toDate(endDate));
+//        return ResponseEntity.ok(totalAmountDtoList);
+//    }
+
+    public static Date toDate(LocalDate localDate) {
+        if (localDate == null) {
+            return null;
+        }
+        LocalDateTime localDateTime = localDate.atStartOfDay();
+        return Date.from(localDateTime.toInstant(java.time.ZoneOffset.UTC));
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +31,19 @@ public class CategoryServiceImpl implements IBaseService<CategoryDto, Long>, IMo
     public Category getOne(Long id) {
         return iCategoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(Category.class, id));
+    }
+
+    public CategoryDto findByName(String name, String sortBy) {
+        Category category = iCategoryRepository.findByName(name, sortBy)
+                .orElseThrow(() -> new NotFoundException("Not found category"));
+        return  createFromE(category);
+    }
+
+    public List<CategoryDto> findAll() {
+        return iCategoryRepository.findAll()
+                .stream()
+                .map(this::createFromE)
+                .collect(Collectors.toList());
     }
 
     @Override
