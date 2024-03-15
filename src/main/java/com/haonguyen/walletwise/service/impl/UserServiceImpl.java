@@ -179,6 +179,8 @@ public class UserServiceImpl implements IBaseService<UserDetailDto, Long>, IMode
 
     @Override
     public User updateEntity(User entity, UserDetailDto dto) {
+        // Skip null fields when mapping
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
         modelMapper.map(dto, entity);
         return entity;
     }

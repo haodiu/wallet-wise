@@ -84,6 +84,8 @@ public class CategoryServiceImpl implements IBaseService<CategoryDto, Long>, IMo
 
     @Override
     public Category updateEntity(Category entity, CategoryDto dto) {
+        // Skip null fields when mapping
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
         modelMapper.map(dto, entity);
         return entity;
     }
